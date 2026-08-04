@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog do Lucas — Matemática</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Fundo Animado com Símbolos -->
+  <div id="symbols" class="symbols-bg"></div>
+
+  <!-- PÁGINA DE LOGIN -->
+  <div class="page" id="page-login">
+    <!-- PASSO 1: QUEM É VOCÊ -->
+    <div class="login-step active" id="step-who">
+      <div class="who-card">
+        <div class="who-logo">
+          <div class="icon">∑</div>
+          <h1>Blog do Lucas</h1>
+          <p>Matemática — Ensino Médio</p>
+        </div>
+        <p class="who-label">Quem está acessando?</p>
+        <div class="who-options">
+          <button class="who-btn" onclick="gotoTeacherLogin()">
+            <span class="wb-icon">👨‍🏫</span>
+            <span class="wb-text"><strong>Sou o Professor</strong><span>Acesso com edição completa</span></span>
+          </button>
+          <button class="who-btn" onclick="gotoYearSelect()">
+            <span class="wb-icon">🎓</span>
+            <span class="wb-text"><strong>Sou Aluno</strong><span>Acesso para visualização</span></span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASSO 2: SELEÇÃO DO ANO (ENTRA DIRETO SEM SENHA) -->
+    <div class="login-step" id="step-year">
+      <div class="year-card">
+        <h2>Qual é o seu ano? 📚</h2>
+        <p>Selecione a sua turma para continuar</p>
+        <div class="year-options">
+          <button class="year-btn" onclick="selectYear(1)"><span class="yb-num yb-1">1°</span><span class="yb-text"><strong>1° Ano</strong><span>Ensino Médio</span></span></button>
+          <button class="year-btn" onclick="selectYear(2)"><span class="yb-num yb-2">2°</span><span class="yb-text"><strong>2° Ano</strong><span>Ensino Médio</span></span></button>
+          <button class="year-btn" onclick="selectYear(3)"><span class="yb-num yb-3">3°</span><span class="yb-text"><strong>3° Ano</strong><span>Ensino Médio</span></span></button>
+        </div>
+        <button class="btn-back" onclick="goBack('step-who')">← Voltar</button>
+      </div>
+    </div>
+
+    <!-- PASSO 3: LOGIN EXCLUSIVO DO PROFESSOR -->
+    <div class="login-step" id="step-teacher-login">
+      <div class="login-card">
+        <div class="login-card-header">
+          <div class="lch-icon">👨‍🏫</div>
+          <h2>Acesso do Professor</h2>
+          <p>Entre com suas credenciais</p>
+        </div>
+        <div class="login-error" id="err-teacher">Usuário ou senha incorretos.</div>
+        <div class="form-group"><label>Usuário</label><input type="text" id="t-user" placeholder="Usuário do professor" onkeydown="if(event.key==='Enter')loginTeacher()"></div>
+        <div class="form-group"><label>Senha</label><input type="password" id="t-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')loginTeacher()"></div>
+        <button class="btn-primary" onclick="loginTeacher()">Entrar</button>
+        <button class="btn-back" onclick="goBack('step-who')">← Voltar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PÁGINA PRINCIPAL -->
+  <div class="page" id="page-main">
+    <header class="header">
+      <div class="header-left">
+        <div class="header-logo">
+          <span class="logo-icon">∑</span>
+          <span class="logo-text">Blog do Lucas</span>
+        </div>
+        <span class="badge-role" id="role-badge"></span>
+      </div>
+      <nav class="nav-desktop">
+        <button class="nav-btn active" onclick="showSection('home')">🏠 Início</button>
+        <button class="nav-btn" onclick="showSection('tasks')">📋 Tarefas</button>
+        <button class="nav-btn" onclick="showSection('tips')">💡 Dicas</button>
+      </nav>
+      <button class="btn-logout" onclick="doLogout()">Sair 🚪</button>
+    </header>
+
+    <main class="main-content">
+      <!-- SEÇÃO HOME -->
+      <section class="section active" id="section-home">
+        <div class="welcome-banner">
+          <h2 id="welcome-msg"></h2>
+          <p id="welcome-sub"></p>
+        </div>
+
+        <div class="stats-grid" id="stats-row"></div>
+
+        <div class="home-block">
+          <div class="home-block-header">
+            <h3>📌 Tarefas Recentes</h3>
+            <button class="btn-link" onclick="showSection('tasks')">Ver todas →</button>
+          </div>
+          <div id="recent-tasks"></div>
+        </div>
+      </section>
+
+      <!-- SEÇÃO TAREFAS -->
+      <section class="section" id="section-tasks">
+        <div class="section-header">
+          <h2>📋 Quadro de Tarefas</h2>
+          <input type="text" id="task-search" class="search-input" placeholder="🔍 Buscar tarefa..." oninput="renderTasks()">
+        </div>
+
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-filter="all">Todas</button>
+          <button class="filter-tab" data-filter="diaria">Diárias</button>
+          <button class="filter-tab" data-filter="semanal">Semanais</button>
+          <button class="filter-tab" data-filter="mensal">Mensais</button>
+          <button class="filter-tab" data-filter="bimestral">Bimestrais</button>
+        </div>
+
+        <div class="tasks-grid" id="tasks-container"></div>
+      </section>
+
+      <!-- SEÇÃO DICAS -->
+      <section class="section" id="section-tips">
+        <div class="section-header">
+          <h2>💡 Dicas & Macetes</h2>
+          <input type="text" id="tip-search" class="search-input" placeholder="🔍 Buscar dica..." oninput="renderTips()">
+        </div>
+
+        <div class="tips-grid" id="tips-container"></div>
+      </section>
+    </main>
+
+    <!-- NAVEGAÇÃO MOBILE -->
+    <nav class="nav-mobile">
+      <button class="bnav-btn active" onclick="showSection('home')"><span>🏠</span><span>Início</span></button>
+      <button class="bnav-btn" onclick="showSection('tasks')"><span>📋</span><span>Tarefas</span></button>
+      <button class="bnav-btn" onclick="showSection('tips')"><span>💡</span><span>Dicas</span></button>
+    </nav>
+
+    <!-- BOTAO FLUTUANTE (FAB) PARA ADICIONAR -->
+    <button class="fab" id="fab" onclick="openFab()">+</button>
+  </div>
+
+  <!-- MODAL DE CRIAR/EDITAR TAREFA -->
+  <div class="modal" id="task-modal">
+    <div class="modal-box">
+      <h3 id="modal-title">➕ Nova Tarefa</h3>
+      <div class="form-group"><label>Título</label><input type="text" id="m-title" placeholder="Ex: Exercícios de Geometria"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Frequência</label>
+          <select id="m-type">
+            <option value="diaria">Diária</option>
+            <option value="semanal" selected>Semanal</option>
+            <option value="mensal">Mensal</option>
+            <option value="bimestral">Bimestral</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Turma</label>
+          <select id="m-turma">
+            <option value="all">Todas as Turmas</option>
+            <option value="1">1° Ano</option>
+            <option value="2">2° Ano</option>
+            <option value="3">3° Ano</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Data de Entrega</label><input type="date" id="m-date"></div>
+      <div class="form-group"><label>Descrição / Orientações</label><textarea id="m-desc" rows="3" placeholder="Detalhes da atividade..."></textarea></div>
+      <div class="form-group"><label>Link Externo (Opcional)</label><input type="url" id="m-link" placeholder="https://..."></div>
+      <div class="form-group">
+        <label>Foto da Galeria / Imagem (Opcional)</label>
+        <input type="file" id="m-image" accept="image/*">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-sec" onclick="closeModal()">Cancelar</button>
+        <button class="btn-primary" onclick="saveTask()">Salvar Tarefa</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE CRIAR/EDITAR DICA -->
+  <div class="modal" id="tip-modal">
+    <div class="modal-box">
+      <h3 id="tip-modal-title">💡 Nova Dica</h3>
+      <div class="form-row">
+        <div class="form-group" style="flex:0 0 80px;"><label>Ícone</label><input type="text" id="tm-icon" placeholder="📐" maxlength="2"></div>
+        <div class="form-group" style="flex:1;"><label>Título</label><input type="text" id="tm-title" placeholder="Ex: Regra dos Sinais"></div>
+      </div>
+      <div class="form-group"><label>Explicação</label><textarea id="tm-desc" rows="3" placeholder="Explique o macete de forma simples..."></textarea></div>
+      <div class="form-group"><label>Fórmula / Exemplo (Opcional)</label><input type="text" id="tm-formula" placeholder="Ex: (+) × (-) = (-)"></div>
+      <div class="modal-actions">
+        <button class="btn-sec" onclick="closeTipModal()">Cancelar</button>
+        <button class="btn-primary" onclick="saveTip()">Salvar Dica</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CONFIRMAÇÃO -->
+  <div class="modal" id="confirm-modal">
+    <div class="modal-box" style="max-width: 360px; text-align: center;">
+      <h3>⚠️ Confirmar exclusão?</h3>
+      <p style="color: var(--text-sec); margin: 0.8rem 0 1.5rem;">Esta ação não poderá ser desfeita.</p>
+      <div class="modal-actions" style="justify-content: center;">
+        <button class="btn-sec" onclick="closeConfirm()">Cancelar</button>
+        <button class="btn-primary" id="confirm-ok-btn" style="background: var(--danger);">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast" id="toast"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
