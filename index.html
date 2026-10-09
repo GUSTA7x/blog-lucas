@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cyber Math - Plataforma Avançada de Matemática</title>
+  <title>BLOG DO LUQUINHAS - Plataforma Avançada de Matemática</title>
   
   <!-- FONTES -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,7 +29,7 @@
         <div class="brand-header">
           <div class="brand-logo-glow">∑</div>
           <div>
-            <h1 class="brand-name">CYBER<span>MATH</span></h1>
+            <h1 class="brand-name">BLOG DO <span>LUQUINHAS</span></h1>
             <p class="brand-tagline">Portal de Aprendizado Matemático</p>
           </div>
         </div>
@@ -94,7 +94,7 @@
         <!-- ETAPA 2B: Auth de Professor -->
         <div id="step-teacher-auth" class="login-step">
           <button class="btn-back" onclick="goToStep('step-role')">← Voltar</button>
-          <h2 class="step-heading">Acesso Docente:</h2>
+          <h2 class="step-heading">Acesso Do Professor:</h2>
           <form id="teacher-form" onsubmit="handleTeacherLogin(event)">
             <div class="input-field">
               <label>Código do Docente</label>
@@ -107,7 +107,7 @@
                 <button type="button" class="toggle-mask-btn" onclick="togglePasswordMask('teacher-pass', this)">👁️</button>
               </div>
             </div>
-            <button type="submit" class="btn-hero">Acessar Painel Docente</button>
+            <button type="submit" class="btn-hero">Acessar Painel Do Professor</button>
           </form>
         </div>
       </div>
@@ -120,12 +120,12 @@
       <div class="nav-container">
         <div class="nav-brand">
           <div class="brand-logo-glow sm">∑</div>
-          <h1 class="brand-title">CYBER<span>MATH</span></h1>
+          <h1 class="brand-title">BLOG DO <span>LUQUINHA</span></h1>
           <span id="user-status-chip" class="status-chip">Estudante</span>
         </div>
 
-        <div class="nav-links">
-          <button class="nav-item active" onclick="switchSection('dashboard')">🏠 Dashboard</button>
+        <div class="nav-links"><button class="nav-item active" onclick="switchSection('dashboard')">🏠 Inicio</button>
+          
           <button class="nav-item" onclick="switchSection('tasks')">📋 Tarefas</button>
           <button class="nav-item" onclick="switchSection('videos')">🎬 Vídeos</button>
           <button class="nav-item" onclick="switchSection('tips')">💡 Dicas & Fórmulas</button>
@@ -145,7 +145,7 @@
         <div class="dashboard-hero glass-panel">
           <div class="hero-text-content">
             <span class="hero-tag">BEM-VINDO AO FUTURO</span>
-            <h2 id="welcome-title">Olá, Estudante!</h2>
+            <h2 id="welcome-title">Painel do Professor</h2>
             <p>Acompanhe seu progresso e mantenha suas atividades matemáticas em dia.</p>
           </div>
           <div class="hero-graphic">
@@ -253,9 +253,9 @@
 
     <!-- NAVEGAÇÃO MOBILE -->
     <div class="mobile-nav">
-      <button class="mnav-item active" onclick="switchSection('dashboard')">
+      <button class="mnav-item active" onclick="switchSection('Inicio')">
         <span>🏠</span>
-        <span>Home</span>
+        <span>Início</span>
       </button>
       <button class="mnav-item" onclick="switchSection('tasks')">
         <span>📋</span>

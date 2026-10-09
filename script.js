@@ -266,8 +266,24 @@ function getFilteredTasks(sourceArray = state.tasks) {
 
 function renderMetrics() {
   const userTasks = getFilteredTasks(state.tasks);
-  const pending = userTasks.filter(t => !t.completedBy.includes(getUserKey())).length;
-  const completed = userTasks.filter(t => t.completedBy.includes(getUserKey())).length;
+  const userKey = getUserKey();
+
+  const filteredTasksForUser = userTasks.filter(t => {
+    if (state.currentUser?.role === 'student') {
+      return t.targetClass === state.currentUser.classGroup || t.targetClass === 'Todas';
+    }
+    return true;
+  });
+
+  const filteredTipsForUser = state.tips.filter(k => {
+    if (state.currentUser?.role === 'student') {
+      return k.targetClass === state.currentUser.classGroup || k.targetClass === 'Todas';
+    }
+    return true;
+  });
+
+  const pending = filteredTasksForUser.filter(t => !t.completedBy.includes(userKey)).length;
+  const completed = filteredTasksForUser.filter(t => t.completedBy.includes(userKey)).length;
 
   const pendingEl = document.getElementById('count-pending');
   const completedEl = document.getElementById('count-completed');
@@ -275,7 +291,7 @@ function renderMetrics() {
 
   if (pendingEl) pendingEl.innerText = pending;
   if (completedEl) completedEl.innerText = completed;
-  if (tipsEl) tipsEl.innerText = state.tips.length;
+  if (tipsEl) tipsEl.innerText = filteredTipsForUser.length;
 }
 
 function getUserKey() {
@@ -315,7 +331,6 @@ function renderVideos() {
 function getVideoMediaInfo(url) {
   if (!url) return { isVideo: false };
 
-  // Detecção do YouTube
   const ytMatch = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
   if (ytMatch && ytMatch[2].length === 11) {
     const ytId = ytMatch[2];
@@ -327,7 +342,6 @@ function getVideoMediaInfo(url) {
     };
   }
 
-  // Detecção de Vídeo Direto ou Ficheiro Local (blob: / .mp4 / .webm, etc.)
   if (url.startsWith('blob:') || /\.(mp4|webm|ogg|mov)$/i.test(url)) {
     return {
       isVideo: true,
@@ -501,7 +515,7 @@ function toggleReaction(announcementId, emoji) {
   renderAnnouncements();
 }
 
-// REPRODUTOR DE VÍDEO & LIGHTBOX (CORRIGIDO PARA VÍDEOS INTERNOS/LOCAIS)
+// REPRODUTOR DE VÍDEO & LIGHTBOX
 function openLightbox(url, type, provider = 'direct') {
   const lightbox = document.getElementById('modal-lightbox');
   const content = document.getElementById('lightbox-content');
