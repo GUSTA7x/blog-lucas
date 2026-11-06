@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isTeacher() {
+      return request.auth != null
+        && request.auth.token.email == "lucasprofessor184@gmail.com";
+    }
+    function isStudent() {
+      return request.auth != null && request.auth.token.firebase.sign_in_provider == "anonymous";
+    }
+
+    match /siteData/main {
+      allow read: if request.auth != null;
+      allow create, update, delete: if isTeacher();
+    }
+
+    match /studentProgress/{studentUid} {
+      allow read, create, update, delete: if isStudent() && request.auth.uid == studentUid;
+    }
+  }
+}

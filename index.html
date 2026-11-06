@@ -97,13 +97,13 @@
           <h2 class="step-heading">Acesso Do Professor:</h2>
           <form id="teacher-form" onsubmit="handleTeacherLogin(event)">
             <div class="input-field">
-              <label>Código do Docente</label>
-              <input type="text" id="teacher-id" placeholder="Ex: PROF-2026" required>
+              <label>E-mail do Professor</label>
+              <input type="email" id="teacher-id" placeholder="seuemail@exemplo.com" autocomplete="username" required>
             </div>
             <div class="input-field">
-              <label>Chave de Acesso Protegida</label>
+              <label>Senha</label>
               <div class="masked-input-wrap">
-                <input type="password" id="teacher-pass" class="encrypted-input" placeholder="••••••••" required>
+                <input type="password" id="teacher-pass" class="encrypted-input" placeholder="Sua senha do Firebase" autocomplete="current-password" required>
                 <button type="button" class="toggle-mask-btn" onclick="togglePasswordMask('teacher-pass', this)">👁️</button>
               </div>
             </div>
@@ -339,16 +339,13 @@
         <div id="field-media-upload" class="input-field">
           <label>Mídia (Foto / Vídeo / Documento)</label>
           <div class="media-input-type">
-            <label><input type="radio" name="mediaSource" value="url" checked onclick="toggleMediaSource()"> URL do Link / Imagem / Vídeo</label>
-            <label><input type="radio" name="mediaSource" value="file" onclick="toggleMediaSource()"> Escolher do Computador</label>
+            <label><input type="radio" name="mediaSource" value="url" checked onclick="toggleMediaSource()"> Link de imagem ou vídeo</label>
           </div>
           
           <div id="wrap-media-url">
             <input type="url" id="create-link" placeholder="https://...">
           </div>
-          <div id="wrap-media-file" style="display:none; margin-top:0.5rem;">
-            <input type="file" id="create-file" accept="image/*,video/*">
-          </div>
+
         </div>
 
         <div class="modal-footer">
@@ -415,5 +412,59 @@
 
   <!-- JS -->
   <script src="script.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signInAnonymously, signOut } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBD0awPNO74_5HadAJVcFnonqPrTLHTcbc",
+      authDomain: "site-lucas2.firebaseapp.com",
+      projectId: "site-lucas2",
+      storageBucket: "site-lucas2.firebasestorage.app",
+      messagingSenderId: "667566899025",
+      appId: "1:667566899025:web:96cf1199791abce62c9d70",
+      measurementId: "G-Z7L7XS9YYG"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const TEACHER_EMAIL = "lucasprofessor184@gmail.com";
+    const siteRef = doc(db, "siteData", "main");
+
+    window.firebaseAPI = {
+      teacherEmail: TEACHER_EMAIL,
+      async loginTeacher(email, password) {
+        if (email.toLowerCase() !== TEACHER_EMAIL) throw new Error("Este e-mail não está autorizado para o painel do professor.");
+        const credential = await signInWithEmailAndPassword(auth, email, password);
+        return credential.user;
+      },
+      async loginStudent() {
+        const credential = await signInAnonymously(auth);
+        return credential.user;
+      },
+      async logout() { await signOut(auth); },
+      async loadSiteData() {
+        const snap = await getDoc(siteRef);
+        return snap.exists() ? snap.data() : null;
+      },
+      async saveSiteData(data) {
+        if (!auth.currentUser || auth.currentUser.isAnonymous || auth.currentUser.email !== TEACHER_EMAIL) {
+          throw new Error("Somente o professor autorizado pode alterar os conteúdos.");
+        }
+        await setDoc(siteRef, data);
+      },
+      async loadProgress() {
+        if (!auth.currentUser || !auth.currentUser.isAnonymous) return {};
+        const snap = await getDoc(doc(db, "studentProgress", auth.currentUser.uid));
+        return snap.exists() ? (snap.data().completedTasks || {}) : {};
+      },
+      async saveProgress(completedTasks) {
+        if (!auth.currentUser || !auth.currentUser.isAnonymous) throw new Error("Sessão de aluno inválida.");
+        await setDoc(doc(db, "studentProgress", auth.currentUser.uid), { completedTasks });
+      }
+    };
+    window.dispatchEvent(new Event("firebase-ready"));
+  </script>
 </body>
 </html>
