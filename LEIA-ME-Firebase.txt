@@ -1,0 +1,30 @@
+# Integração Firebase — BLOG DO LUQUINHAS
+
+Arquivos:
+- `index.html`: página com SDKs de Authentication e Firestore (sem Storage).
+- `script.js`: lógica do site ligada ao Firebase.
+- `firestore.rules`: regras de segurança para publicar no Firestore.
+- `style.css`: mantenha o CSS original; não precisa alterar.
+
+## Como instalar
+1. Faça uma cópia de segurança dos arquivos atuais.
+2. Substitua o `index.html` e o `script.js` pelos arquivos deste pacote.
+3. Mantenha seu `style.css` atual na mesma pasta.
+4. No Firebase Console, confirme Authentication > Sign-in method: Email/Password e Anonymous ativados.
+5. No Firestore, abra Regras, substitua pelo conteúdo de `firestore.rules` e clique em Publicar.
+6. Publique os arquivos no mesmo serviço de hospedagem do site (não abra pelo `file://`; use um servidor ou hospedagem HTTPS).
+
+## Observações importantes
+- O login de professor aceita somente `lucasprofessor184@gmail.com`; a senha é a que foi cadastrada no Firebase Authentication. Nunca coloque a senha no código.
+- Os alunos entram escolhendo a turma e recebem uma sessão anônima do Firebase. O progresso fica associado ao UID anônimo daquele navegador/dispositivo.
+- O conteúdo inicial que já estava no JavaScript permanece como conteúdo de demonstração até o professor salvar conteúdo na nuvem.
+- O Firestore guarda o conteúdo geral em `siteData/main`; o progresso fica em `studentProgress/{UID}`.
+- Sem Firebase Storage, imagens e vídeos precisam ser publicados em outro lugar e inseridos como URL pública. Links do YouTube funcionam.
+- Reações aos recados ainda ficam apenas no estado local da página nesta primeira versão; o conteúdo principal e o progresso de tarefas são sincronizados com o Firestore.
+- As regras impedem gravação de conteúdo por alunos. Não compartilhe o acesso da conta do professor.
+
+## Teste recomendado
+1. Entre como professor e publique uma tarefa de teste.
+2. Abra o site em janela anônima, entre como aluno e selecione a turma correspondente.
+3. Confira se a tarefa aparece e marque como concluída.
+4. Reabra o site no mesmo navegador/dispositivo e confira se o progresso continua.

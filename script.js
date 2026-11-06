@@ -68,10 +68,11 @@ const state = {
 };
 
 // INICIALIZAÇÃO
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   initParticles();
   loadLocalStorage();
   checkAuth();
+  // O conteúdo da nuvem é carregado somente depois da autenticação Firebase.
 });
 
 // GERENCIADOR DE PARTÍCULAS
@@ -97,20 +98,48 @@ function loadLocalStorage() {
   const savedVideos = localStorage.getItem('cm_videos');
   const savedTips = localStorage.getItem('cm_tips');
   const savedAnnouncements = localStorage.getItem('cm_announcements');
-  const savedUser = localStorage.getItem('cm_user');
 
   if (savedTasks) state.tasks = JSON.parse(savedTasks);
   if (savedVideos) state.videos = JSON.parse(savedVideos);
   if (savedTips) state.tips = JSON.parse(savedTips);
   if (savedAnnouncements) state.announcements = JSON.parse(savedAnnouncements);
-  if (savedUser) state.currentUser = JSON.parse(savedUser);
+  // A sessão autenticada será validada novamente pelo Firebase; não confiar apenas no localStorage.
 }
 
-function saveData() {
+async function saveData() {
   localStorage.setItem('cm_tasks', JSON.stringify(state.tasks));
   localStorage.setItem('cm_videos', JSON.stringify(state.videos));
   localStorage.setItem('cm_tips', JSON.stringify(state.tips));
   localStorage.setItem('cm_announcements', JSON.stringify(state.announcements));
+  if (state.currentUser?.role === 'teacher') {
+    try {
+      await window.firebaseAPI.saveSiteData({
+        tasks: state.tasks, videos: state.videos, tips: state.tips,
+        announcements: state.announcements, updatedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error(error);
+      showToast('Erro ao salvar na nuvem: ' + error.message);
+    }
+  }
+}
+
+async function loadCloudData() {
+  const cloudData = await window.firebaseAPI.loadSiteData();
+  if (cloudData) {
+    state.tasks = cloudData.tasks || [];
+    state.videos = cloudData.videos || [];
+    state.tips = cloudData.tips || [];
+    state.announcements = cloudData.announcements || [];
+  }
+}
+
+async function restoreStudentProgress() {
+  const progress = await window.firebaseAPI.loadProgress();
+  state.tasks.forEach(task => {
+    task.completedBy = Array.isArray(task.completedBy) ? task.completedBy.filter(x => x !== 'guest') : [];
+    if (progress[task.id]) task.completedBy.push(state.currentUser.uid);
+  });
 }
 
 // ROTEAMENTO & AUTH
@@ -144,32 +173,40 @@ function goToStep(stepId) {
   hideLoginAlert();
 }
 
-function selectClass(className) {
-  state.currentUser = { role: 'student', classGroup: className };
-  localStorage.setItem('cm_user', JSON.stringify(state.currentUser));
-  checkAuth();
-  showToast(`Bem-vindo à turma do ${className}!`);
-}
-
-function handleTeacherLogin(e) {
-  e.preventDefault();
-  const idInput = document.getElementById('teacher-id');
-  const passInput = document.getElementById('teacher-pass');
-
-  const id = idInput ? idInput.value.trim() : '';
-  const pass = passInput ? passInput.value : '';
-
-  if (id === 'Lucas_adm' && pass === '12345678') {
-    state.currentUser = { role: 'teacher', classGroup: null };
+async function selectClass(className) {
+  try {
+    const authUser = await window.firebaseAPI.loginStudent();
+    state.currentUser = { role: 'student', classGroup: className, uid: authUser.uid };
     localStorage.setItem('cm_user', JSON.stringify(state.currentUser));
+    await loadCloudData();
+    await restoreStudentProgress();
     checkAuth();
-    showToast('Acesso de Professor Autorizado!');
-  } else {
-    showLoginAlert('Credenciais inválidas. Tente novamente.');
+    showToast(`Bem-vindo à turma do ${className}!`);
+  } catch (error) {
+    showLoginAlert('Não foi possível entrar como aluno. Verifique se o login anônimo está ativado no Firebase.');
+    console.error(error);
   }
 }
 
-function logout() {
+async function handleTeacherLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('teacher-id')?.value.trim() || '';
+  const password = document.getElementById('teacher-pass')?.value || '';
+  try {
+    const authUser = await window.firebaseAPI.loginTeacher(email, password);
+    state.currentUser = { role: 'teacher', classGroup: null, uid: authUser.uid, email: authUser.email };
+    localStorage.setItem('cm_user', JSON.stringify(state.currentUser));
+    await loadCloudData();
+    checkAuth();
+    showToast('Acesso de Professor autorizado!');
+  } catch (error) {
+    console.error(error);
+    showLoginAlert('Não foi possível entrar. Confira o e-mail e a senha cadastrados no Firebase.');
+  }
+}
+
+async function logout() {
+  try { await window.firebaseAPI?.logout(); } catch (error) { console.warn(error); }
   state.currentUser = null;
   localStorage.removeItem('cm_user');
   checkAuth();
@@ -295,7 +332,7 @@ function renderMetrics() {
 }
 
 function getUserKey() {
-  return state.currentUser ? (state.currentUser.classGroup || 'teacher') : 'guest';
+  return state.currentUser ? (state.currentUser.uid || state.currentUser.classGroup || 'teacher') : 'guest';
 }
 
 function renderTasks() {
@@ -556,22 +593,24 @@ function closeLightbox(e) {
 }
 
 // AÇÕES DE DADOS (CRIAR & EDITAR)
-function toggleTaskComplete(taskId) {
+async function toggleTaskComplete(taskId) {
   const task = state.tasks.find(t => t.id === taskId);
-  if (!task) return;
-
+  if (!task || state.currentUser?.role !== 'student') return;
   const key = getUserKey();
+  task.completedBy = Array.isArray(task.completedBy) ? task.completedBy : [];
   const idx = task.completedBy.indexOf(key);
-
+  const progress = await window.firebaseAPI.loadProgress();
   if (idx > -1) {
     task.completedBy.splice(idx, 1);
+    delete progress[taskId];
     showToast('Tarefa marcada como pendente.');
   } else {
     task.completedBy.push(key);
+    progress[taskId] = true;
     showToast('Parabéns! Tarefa concluída.');
   }
-
-  saveData();
+  try { await window.firebaseAPI.saveProgress(progress); }
+  catch (error) { showToast('Não foi possível salvar seu progresso.'); console.error(error); }
   renderAll();
 }
 
@@ -709,17 +748,8 @@ function handleCreateSubmit(e) {
     else if (isVideoUrl(link) || getVideoMediaInfo(link).isVideo) mediaType = 'video';
     else if (link) mediaType = 'link';
   } else {
-    const fileInput = document.getElementById('create-file');
-    if (fileInput && fileInput.files && fileInput.files[0]) {
-      const file = fileInput.files[0];
-      link = URL.createObjectURL(file);
-      
-      if (file.type.startsWith('image/')) {
-        mediaType = 'image';
-      } else if (file.type.startsWith('video/')) {
-        mediaType = 'video';
-      }
-    }
+    showToast('Use um link público de imagem ou vídeo. Envio de arquivos está desativado sem o Storage.');
+    return;
   }
 
   if (editId) {
